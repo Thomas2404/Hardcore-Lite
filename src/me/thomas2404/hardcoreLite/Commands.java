@@ -5,9 +5,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
-import org.bukkit.craftbukkit.Main;
 import org.bukkit.entity.Player;
-import org.bukkit.event.entity.PlayerDeathEvent;
 
 import java.util.Locale;
 
@@ -40,10 +38,6 @@ public class Commands implements CommandExecutor {
                 sender.sendMessage(ChatColor.WHITE + " - " + ChatColor.RED + "add " + ChatColor.WHITE + "Add one or more life to a players life count. Input a negative number to remove lives. Can only be used if you are oped.");
                 sender.sendMessage(ChatColor.YELLOW + " ------------------------------------ ");
 
-                //Add a command to see all remaining players.
-                //Change add so that you can't have less than 0 lives.
-
-                //Add a broadcast when a player is given a life and when a life is added.
 
             } else {
                 String command = args[0].toLowerCase(Locale.ROOT);
@@ -54,7 +48,7 @@ public class Commands implements CommandExecutor {
                     case "about":
                         break;
                     case "colors":
-                        sender.sendMessage(ChatColor.RED + "Dark green = 5 lives, light green = 4 lives, yellow = 3 lives, light red = 2 lives, dark red = 1 life, and grey = 0 lives remaining.");
+                        sender.sendMessage(ChatColor.RED + "Dark green = 5 or more lives, light green = 4 lives, yellow = 3 lives, light red = 2 lives, dark red = 1 life, and grey = 0 lives remaining.");
                         break;
                     case "list":
                         int i = 1;
@@ -75,17 +69,34 @@ public class Commands implements CommandExecutor {
                                     Player receiver = Bukkit.getPlayer(receiverName);
                                     String receiverUID = String.valueOf(receiver.getUniqueId());
                                     int currentLives = plugin.fileConfiguration.getInt("players." + receiverUID + ".lives");
-                                    String lifeWord = "life";
+
 
                                     plugin.fileConfiguration.set("players." + receiverUID + ".lives", currentLives + addedLives);
 
-                                    if (addedLives > 1) {
+                                    //If lives are set to a number less than zero, bump the player back up to 0 lives.
+                                    if (plugin.fileConfiguration.getInt("players." + receiverUID + ".lives") < 0) {
+                                        plugin.fileConfiguration.set("players." + receiverUID + ".lives", 0);
+                                    }
+
+                                    plugin.saveConfig();
+
+                                    int totalLives = plugin.fileConfiguration.getInt("players." + receiverUID + ".lives");
+
+                                    String lifeWord = "life";
+                                    if (addedLives != 1) {
                                         lifeWord = "lives";
                                     }
+
+                                    String totalLifeWord = "life";
+                                    if (totalLives != 1) {
+                                        lifeWord = "lives";
+                                    }
+
                                     sender.sendMessage(ChatColor.WHITE + "You have given " + ChatColor.RED + receiverName + " "  + addedLives + " " + ChatColor.WHITE + lifeWord + ".");
                                     receiver.sendMessage(ChatColor.WHITE + "You have been given " + ChatColor.RED + addedLives + " " + ChatColor.WHITE + lifeWord + ".");
-                                    receiver.sendMessage(ChatColor.WHITE + "You now have " + ChatColor.RED + plugin.fileConfiguration.getInt("players." + receiverUID + ".lives") + ChatColor.WHITE + " lives.");
-                                    plugin.saveConfig();
+                                    receiver.sendMessage(ChatColor.WHITE + "You now have " + ChatColor.RED + totalLives + ChatColor.WHITE + " lives.");
+
+                                    plugin.getServer().broadcastMessage(ChatColor.RED + receiverName + ChatColor.WHITE + " has been given " + ChatColor.RED + addedLives + " " + ChatColor.WHITE + lifeWord + ". They now have " + ChatColor.RED + totalLives + ChatColor.WHITE + " " + totalLifeWord + ".");
 
                                     ReloadEvent event = new ReloadEvent(((Player) sender).getPlayer(), currentLives + addedLives);
                                     Bukkit.getPluginManager().callEvent(event);
@@ -131,13 +142,19 @@ public class Commands implements CommandExecutor {
                                     plugin.saveConfig();
 
                                     String lifeWord = "life";
-
-                                    if (givenLives > 1) {
+                                    if (givenLives != 1) {
                                         lifeWord = "lives";
+                                    }
+
+                                    String endLifeWord = "life";
+                                    if (endReceiverLives != 1) {
+                                        endLifeWord = "lives";
                                     }
 
                                     receiver.sendMessage(ChatColor.WHITE + "You were given " + ChatColor.RED + givenLives + " " + ChatColor.WHITE + lifeWord + " by " + ChatColor.RED + lifeGiver.getName() + ChatColor.WHITE + ".");
                                     lifeGiver.sendMessage(ChatColor.WHITE + "You gave " + ChatColor.RED + receiver.getName() + " " + givenLives + ChatColor.WHITE + " " + lifeWord + ".");
+
+                                    plugin.getServer().broadcastMessage(ChatColor.RED + lifeGiver.getName() + ChatColor.WHITE + " has given " + ChatColor.RED + receiverName + " " + ChatColor.RED + givenLives + " " + ChatColor.WHITE + lifeWord + ". " + ChatColor.RED + receiverName + ChatColor.RED + " now has " + ChatColor.RED + endReceiverLives + ChatColor.WHITE + " " + endLifeWord + ".");
 
                                     ReloadEvent giverEvent = new ReloadEvent(lifeGiver, endGiverLives);
                                     ReloadEvent receiverEvent = new ReloadEvent(receiver, endReceiverLives);

@@ -1,27 +1,17 @@
 package me.thomas2404.hardcoreLite;
 
 import org.bukkit.ChatColor;
-import org.bukkit.EntityEffect;
-import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.entity.EntityPotionEffectEvent;
 import org.bukkit.event.entity.EntityResurrectEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
-import org.bukkit.event.player.PlayerItemBreakEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.io.IOException;
-
 public class HardcoreLite extends JavaPlugin {
-
-    public static final String CHAT_PREFIX = ChatColor.RED + "[Hardcore Lite] ";
 
     public static HardcoreLite plugin;
 
@@ -123,13 +113,19 @@ public class HardcoreLite extends JavaPlugin {
 
             int lives = fileConfiguration.getInt("players." + uid + ".lives") - 1;
             fileConfiguration.set("players." + uid + ".lives", lives);
+
+            //If lives are set to a number less than zero, bump the player back up to 0 lives.
+            if (plugin.fileConfiguration.getInt("players." + uid + ".lives") < 0) {
+                plugin.fileConfiguration.set("players." + uid + ".lives", 0);
+            }
+
             saveConfig();
 
             setNameColor(player, lives);
 
-            String lifeWord = "lives.";
-            if (lives == 1) {
-                lifeWord = "life.";
+            String lifeWord = "life.";
+            if (lives != 1) {
+                lifeWord = "lives.";
             }
             getServer().broadcastMessage(ChatColor.RED + player.getName() + ChatColor.WHITE + " has lost a life! They now have " + ChatColor.RED + lives + ChatColor.WHITE + " " + lifeWord);
         }
