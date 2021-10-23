@@ -1,5 +1,7 @@
 package me.thomas2404.hardcoreLite;
 
+import net.minecraft.advancements.Advancement;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
@@ -7,9 +9,14 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityResurrectEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerAchievementAwardedEvent;
+import org.bukkit.event.player.PlayerAdvancementDoneEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import java.util.Arrays;
+import java.util.List;
 
 public class HardcoreLite extends JavaPlugin {
 
@@ -106,6 +113,33 @@ public class HardcoreLite extends JavaPlugin {
             int lives = event.getLives();
 
             setNameColor(player, lives);
+        }
+
+        @EventHandler
+        public void onAdvancementEvent(PlayerAdvancementDoneEvent event) {
+
+            Player player = event.getPlayer();
+            String advancement = event.getAdvancement().getKey().getKey();
+            String uid = String.valueOf(player.getUniqueId());
+            int lives = fileConfiguration.getInt("players." + uid + ".lives") + 1;
+
+            List<String> awardAdvancements = Arrays.asList("story/cure_zombie_villager", "nether/fast_travel", "nether/uneasy_alliance", "nether/create_full_beacon",
+                    "nether/all_effects", "nether/all_potions", "end/kill_dragon", "adventure/caves_and_cliffs", "adventure/kill_all_mobs", "adventure/arbalistic",
+                    "adventure/adventuring_time", "husbandry/bred_all_animals", "husbandry/complete_catalogue", "husbandry/balanced_diet", "husbandry/obtain_netherite_hoe");
+
+            if (awardAdvancements.contains(advancement)) {
+                fileConfiguration.set("players." + uid + ".lives", lives);
+
+                saveConfig();
+                setNameColor(player, lives);
+
+                String lifeWord = "life.";
+                if (lives != 1) {
+                    lifeWord = "lives.";
+                }
+
+                getServer().broadcastMessage(ChatColor.RED + player.getName() + ChatColor.WHITE + " has earned a life! They now have " + ChatColor.RED + lives + ChatColor.WHITE + " " + lifeWord);
+            }
         }
 
         private void removeLife(Player player) {
