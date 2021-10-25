@@ -14,7 +14,9 @@ Players start with 5 lives and are given opportunities to earn more through achi
 - Several intuitive commands, such as the abilitiy to give other players one or more of your lives, and view all players remaining lives.
 - Anouncements when players lose a life.
 - Name colors that change depending on the players remaining lives.
-- Achievements that grant players more lives when completed. (Not yet implemented)
+- Achievements that grant players more lives when completed.
+- Penalty system for killing other players.
+- Option to remove players from the server after they reach 0 lives, or allow them to continue playing.
 
   
 ## Support
