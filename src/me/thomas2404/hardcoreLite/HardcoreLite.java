@@ -1,7 +1,5 @@
 package me.thomas2404.hardcoreLite;
 
-import net.minecraft.advancements.Advancement;
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.EntityType;
@@ -34,6 +32,10 @@ public class HardcoreLite extends JavaPlugin {
     @Override
     public void onEnable() {
 
+        //Make a file in the plugin.yml to see if the plugin is run for the first time? Have a special setup command maybe? Put the setup command in the README file and no where else.
+        //Organize the code a bit better after figuring out the setup. Put methods in different classes? At least make methods for things like the commands.
+
+        //Final thing is add comments explaining the code.
 
 
         plugin = getPlugin(HardcoreLite.class);

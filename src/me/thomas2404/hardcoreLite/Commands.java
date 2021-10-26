@@ -39,8 +39,6 @@ public class Commands implements CommandExecutor {
                 sender.sendMessage(ChatColor.WHITE + " - " + ChatColor.RED + "earnlives " + ChatColor.WHITE + "Learn how you can earn more lives.");
                 sender.sendMessage(ChatColor.YELLOW + " ------------------------------------ ");
 
-                //Check if giving someone a word instead of number of lives causes problems
-
             } else {
                 String command = args[0].toLowerCase(Locale.ROOT);
                 switch (command) {
