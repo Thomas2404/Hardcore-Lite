@@ -1,10 +1,14 @@
 package me.thomas2404.hardcoreLite;
 
+import net.minecraft.server.network.PlayerConnection;
+import org.bukkit.BanList;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityResurrectEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
@@ -32,7 +36,6 @@ public class HardcoreLite extends JavaPlugin {
     @Override
     public void onEnable() {
 
-        //Make a file in the plugin.yml to see if the plugin is run for the first time? Have a special setup command maybe? Put the setup command in the README file and no where else.
         //Organize the code a bit better after figuring out the setup. Put methods in different classes? At least make methods for things like the commands.
 
         //Final thing is add comments explaining the code.
@@ -47,6 +50,13 @@ public class HardcoreLite extends JavaPlugin {
 
         //Register listener
         pm.registerEvents(new EventListener(), this);
+
+        //If the ban players section isn't in the config.yml file, make it and set it to no.
+        if (!fileConfiguration.contains("BanPlayersOn0Lives")) {
+            fileConfiguration.createSection("BanPlayersOn0Lives");
+
+            fileConfiguration.set("BanPlayersOn0Lives", "no");
+        }
     }
 
     @Override
@@ -62,28 +72,24 @@ public class HardcoreLite extends JavaPlugin {
             Player player = event.getPlayer();
             String uid = String.valueOf(player.getUniqueId());
 
-            if (!fileConfiguration.contains(uid)) {
+            if (!fileConfiguration.contains("players." + uid)) {
+
+                getLogger().info("Has never joined before");
                 fileConfiguration.createSection("players." + uid + ".lives");
                 fileConfiguration.set("players." + uid + ".lives", 5);
-
                 fileConfiguration.createSection("players." + uid + ".name");
 
-            } else {
-                getLogger().info(fileConfiguration.getString("players." + uid + ".lives"));
-
-                if (!fileConfiguration.contains(player.getName())) {
-                    fileConfiguration.createSection("players." + uid + ".name");
-                }
+            } else if (!fileConfiguration.contains(player.getName())) {
+                fileConfiguration.createSection("players." + uid + ".name");
             }
 
-
-
             fileConfiguration.set("players." + uid + ".name", player.getName());
-
             saveConfig();
-
             int lives = fileConfiguration.getInt("players." + uid + ".lives");
 
+            if (banPlayers() && lives == 0) {
+                player.kickPlayer(ChatColor.WHITE + "You are on " + ChatColor.RED + "0" + ChatColor.WHITE + " lives.");
+            }
 
             setNameColor(player, lives);
         }
@@ -94,14 +100,18 @@ public class HardcoreLite extends JavaPlugin {
             Player killedPlayer = event.getEntity();
 
             //If the entity that killed the player is a player
-            if (killedPlayer.getKiller().getType() == EntityType.PLAYER) {
+            if (killedPlayer.getKiller() != null) {
+                if (killedPlayer.getKiller().getType() == EntityType.PLAYER) {
 
-                Player killer = killedPlayer.getKiller();
+                    Player killer = killedPlayer.getKiller();
 
-                //Add a life to the killed player and remove a life from the killer.
-                addLife(killedPlayer);
-                removeLife(killer);
+                    //Add a life to the killed player and remove a life from the killer.
+                    addLife(killedPlayer);
+                    removeLife(killer);
 
+                } else {
+                    removeLife(killedPlayer);
+                }
             } else {
                 removeLife(killedPlayer);
             }
@@ -185,16 +195,34 @@ public class HardcoreLite extends JavaPlugin {
                 saveConfig();
                 //Call the name color method.
                 setNameColor(player, lives);
-                //Set up which version of the word should be used.
-                String lifeWord = "life.";
-                if (lives != 1) {
-                    lifeWord = "lives.";
-                }
-                //Broadcast that the player lost a life.
-                getServer().broadcastMessage(ChatColor.RED + player.getName() + ChatColor.WHITE + " has lost a life! They now have " + ChatColor.RED + lives + ChatColor.WHITE + " " + lifeWord);
 
+                //Ban player in they're on 0 lives and you're supposed to ban players.
+                if (banPlayers() && fileConfiguration.getInt("players." + uid + ".lives") == 0) {
+                    getServer().broadcastMessage(ChatColor.RED + player.getName() + ChatColor.WHITE + " is at " + ChatColor.RED + "0" + ChatColor.WHITE + " lives! They have now been " + ChatColor.RED + ChatColor.BOLD + " banned" + ChatColor.WHITE + "!");
+                    player.kickPlayer(ChatColor.WHITE + "You are on " + ChatColor.RED + "0" + ChatColor.WHITE + " lives.");
+                } else {
+
+                    //Set up which version of the word should be used.
+                    String lifeWord = "life.";
+                    if (lives != 1) {
+                        lifeWord = "lives.";
+                    }
+                    //Broadcast that the player lost a life.
+                    getServer().broadcastMessage(ChatColor.RED + player.getName() + ChatColor.WHITE + " has lost a life! They now have " + ChatColor.RED + lives + ChatColor.WHITE + " " + lifeWord);
+
+                }
             } else {
                 getServer().broadcastMessage(ChatColor.RED + player.getName() + ChatColor.WHITE + " has lost a life! They have " + ChatColor.RED + "0" + ChatColor.WHITE + " lives.");
+            }
+        }
+
+        public boolean banPlayers() {
+            String banString = fileConfiguration.getString("BanPlayersOn0Lives");
+
+            if (banString.equalsIgnoreCase("yes") || banString.equalsIgnoreCase("y")) {
+                return true;
+            } else {
+                return false;
             }
         }
 
