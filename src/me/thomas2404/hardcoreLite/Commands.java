@@ -16,6 +16,9 @@ public class Commands implements CommandExecutor {
         plugin = pl;
     }
 
+    ConfigGetter configGetter = new ConfigGetter();
+    SetNameColor setNameColor = new SetNameColor();
+
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String cmdLabel, String[] args) {
 
@@ -25,6 +28,7 @@ public class Commands implements CommandExecutor {
         } else {
 
             String uid = String.valueOf(((Player) sender).getUniqueId());
+            Player player = (Player) sender;
 
             if (args.length == 0) {
                 sender.sendMessage(ChatColor.YELLOW + " ------------------------------------ ");
@@ -44,14 +48,14 @@ public class Commands implements CommandExecutor {
                 switch (command) {
                     case "lives":
 
-                        int lives = plugin.fileConfiguration.getInt("players." + uid + ".lives");
+                        int lives = configGetter.currentLives(player);
 
                         String lifeWord = "life";
                         if (lives != 1) {
                             lifeWord = "lives";
                         }
 
-                        sender.sendMessage(ChatColor.WHITE + "You currently have " + ChatColor.RED + plugin.fileConfiguration.getInt("players." + uid + ".lives") + ChatColor.WHITE + " " + lifeWord + " remaining");
+                        sender.sendMessage(ChatColor.WHITE + "You currently have " + ChatColor.RED + lives + ChatColor.WHITE + " " + lifeWord + " remaining");
                         break;
                     case "about":
                         break;
@@ -98,20 +102,15 @@ public class Commands implements CommandExecutor {
                                     if (String.valueOf(Bukkit.getOnlinePlayers()).contains(receiverName)) {
 
                                         Player receiver = Bukkit.getPlayer(receiverName);
-                                        String receiverUID = String.valueOf(receiver.getUniqueId());
-                                        int currentLives = plugin.fileConfiguration.getInt("players." + receiverUID + ".lives");
-
-
-                                        plugin.fileConfiguration.set("players." + receiverUID + ".lives", currentLives + addedLives);
-
+                                        int currentLives = configGetter.currentLives(receiver);
+                                        //Set the receivers lives to their current lives + the lives that the giver gave to them.
+                                        configGetter.setLives(receiver, currentLives + addedLives);
                                         //If lives are set to a number less than zero, bump the player back up to 0 lives.
-                                        if (plugin.fileConfiguration.getInt("players." + receiverUID + ".lives") < 0) {
-                                            plugin.fileConfiguration.set("players." + receiverUID + ".lives", 0);
+                                        if (configGetter.currentLives(receiver) < 0) {
+                                            configGetter.setLives(receiver, 0);
                                         }
 
-                                        plugin.saveConfig();
-
-                                        int totalLives = plugin.fileConfiguration.getInt("players." + receiverUID + ".lives");
+                                        int totalLives = configGetter.currentLives(receiver);
 
                                         lifeWord = "life";
                                         if (addedLives != 1) {
@@ -126,12 +125,10 @@ public class Commands implements CommandExecutor {
                                         sender.sendMessage(ChatColor.WHITE + "You have given " + ChatColor.RED + receiverName + " "  + addedLives + " " + ChatColor.WHITE + lifeWord + ".");
                                         receiver.sendMessage(ChatColor.WHITE + "You have been given " + ChatColor.RED + addedLives + " " + ChatColor.WHITE + lifeWord + ".");
                                         receiver.sendMessage(ChatColor.WHITE + "You now have " + ChatColor.RED + totalLives + ChatColor.WHITE + " lives.");
-
+                                        //Send a message to the server about the life transaction.
                                         plugin.getServer().broadcastMessage(ChatColor.RED + receiverName + ChatColor.WHITE + " has been given " + ChatColor.RED + addedLives + " " + ChatColor.WHITE + lifeWord + ". They now have " + ChatColor.RED + totalLives + ChatColor.WHITE + " " + totalLifeWord + ".");
-
-                                        ReloadEvent event = new ReloadEvent(((Player) sender).getPlayer(), currentLives + addedLives);
-                                        Bukkit.getPluginManager().callEvent(event);
-
+                                        //Reload the name colors
+                                        setNameColor.changeNameColor(receiver, totalLives);
                                     }
                                 } else {
                                     sender.sendMessage(ChatColor.RED + "Invalid usage. Please make sure you are not adding 0 lives, and that you have correctly typed in a number!");
@@ -195,11 +192,8 @@ public class Commands implements CommandExecutor {
 
                                             plugin.getServer().broadcastMessage(ChatColor.RED + lifeGiver.getName() + ChatColor.WHITE + " has given " + ChatColor.RED + receiverName + " " + ChatColor.RED + givenLives + " " + ChatColor.WHITE + lifeWord + ". " + ChatColor.RED + receiverName + ChatColor.RED + " now has " + ChatColor.RED + endReceiverLives + ChatColor.WHITE + " " + endLifeWord + ".");
 
-                                            ReloadEvent giverEvent = new ReloadEvent(lifeGiver, endGiverLives);
-                                            ReloadEvent receiverEvent = new ReloadEvent(receiver, endReceiverLives);
-
-                                            Bukkit.getPluginManager().callEvent(giverEvent);
-                                            Bukkit.getPluginManager().callEvent(receiverEvent);
+                                            setNameColor.changeNameColor(lifeGiver, endGiverLives);
+                                            setNameColor.changeNameColor(receiver, endReceiverLives);
 
                                         } else {
                                             sender.sendMessage(ChatColor.RED + "Invalid usage. Please make sure you are giving a player at least one life.");
