@@ -14,16 +14,9 @@ import java.util.List;
 
 public class EventHandler implements Listener {
 
-    HardcoreLite plugin;
-    public EventHandler(HardcoreLite pl) {
-        plugin = pl;
-    }
-
-    ConfigGetter configGetter = new ConfigGetter();
-    SetNameColor setNameColor = new SetNameColor();
-    LifeChanges lifeChanges = new LifeChanges();
-
-    public EventHandler() {
+    private HardcoreLite plugin;
+    public EventHandler(HardcoreLite plugin) {
+        this.plugin = plugin;
     }
 
     @org.bukkit.event.EventHandler
@@ -31,14 +24,14 @@ public class EventHandler implements Listener {
         Player player = event.getPlayer();
         String uid = String.valueOf(player.getUniqueId());
         if (!plugin.fileConfiguration.contains("players." + uid)) {
-            configGetter.createSections(player);
+            plugin.configGetter.createSections(player);
         }
-        configGetter.setName(player);
-        int lives = configGetter.currentLives(player);
+        plugin.configGetter.setName(player);
+        int lives = plugin.configGetter.currentLives(player);
         if (banPlayers() && lives == 0) {
             player.kickPlayer(ChatColor.WHITE + "You are on " + ChatColor.RED + "0" + ChatColor.WHITE + " lives.");
         }
-        setNameColor.changeNameColor(player, lives);
+        plugin.setNameColor.changeNameColor(player, lives);
     }
 
     @org.bukkit.event.EventHandler
@@ -49,13 +42,13 @@ public class EventHandler implements Listener {
             if (killedPlayer.getKiller().getType() == EntityType.PLAYER) {
                 Player killer = killedPlayer.getKiller();
                 //Add a life to the killed player and remove a life from the killer.
-                lifeChanges.addLife(killedPlayer);
-                lifeChanges.removeLife(killer);
+                plugin.lifeChanges.addLife(killedPlayer);
+                plugin.lifeChanges.removeLife(killer);
             } else {
-                lifeChanges.removeLife(killedPlayer);
+               plugin.lifeChanges.removeLife(killedPlayer);
             }
         } else {
-            lifeChanges.removeLife(killedPlayer);
+            plugin.lifeChanges.removeLife(killedPlayer);
         }
     }
 
@@ -63,7 +56,7 @@ public class EventHandler implements Listener {
     public void onEntityResurrectEvent(EntityResurrectEvent event) {
         if (!event.isCancelled() && event.getEntity() instanceof Player) {
             Player player = (Player) event.getEntity();
-            lifeChanges.removeLife(player);
+            plugin.lifeChanges.removeLife(player);
         }
     }
 
@@ -79,7 +72,7 @@ public class EventHandler implements Listener {
                 "adventure/adventuring_time", "husbandry/bred_all_animals", "husbandry/complete_catalogue", "husbandry/balanced_diet", "husbandry/obtain_netherite_hoe");
 
         if (awardAdvancements.contains(advancement)) {
-            lifeChanges.addLife(player);
+            plugin.lifeChanges.addLife(player);
         }
     }
 

@@ -4,12 +4,9 @@ import org.bukkit.entity.Player;
 
 public class ConfigGetter {
 
-    HardcoreLite plugin;
-
-    private Player player;
-    private final String uid = player.getUniqueId().toString();
-
-    public ConfigGetter() {
+    private HardcoreLite plugin;
+    public ConfigGetter(HardcoreLite plugin) {
+        this.plugin = plugin;
     }
 
     public int currentLives(Player player) {
@@ -17,11 +14,11 @@ public class ConfigGetter {
     }
 
     public String livesPath(Player player) {
-        return ("players." + uid + ".lives");
+        return ("players." + player.getUniqueId().toString() + ".lives");
     }
 
     public String namePath(Player player) {
-        return ("players." + uid + "name");
+        return ("players." + player.getUniqueId() + ".name");
     }
 
     public void setLives(Player player, int lives) {
