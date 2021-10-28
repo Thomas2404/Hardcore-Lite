@@ -15,18 +15,13 @@ public class HardcoreLite extends JavaPlugin {
     EventHandler eventHandler = new EventHandler(this);
     ConfigGetter configGetter = new ConfigGetter(this);
     SetNameColor setNameColor = new SetNameColor();
+    LifeWord lifeWord = new LifeWord();
 
     @Override
     public void onEnable() {
 
-        //Organize the code a bit better after figuring out the setup. Put methods in different classes? At least make methods for things like the commands.
-
-        //Final thing is add comments explaining the code.
-
-
         plugin = getPlugin(HardcoreLite.class);
         PluginManager pm = getServer().getPluginManager();
-
 
         //Register command
         this.getCommand("hcl").setExecutor(new Commands(this));
@@ -46,6 +41,4 @@ public class HardcoreLite extends JavaPlugin {
     public void onDisable() {
 
     }
-
-
 }

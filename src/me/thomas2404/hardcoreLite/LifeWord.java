@@ -4,12 +4,11 @@ public class LifeWord {
 
     public LifeWord() {
     }
-
     public String getWord(int lives) {
         if (lives != 1) {
-            return "lives.";
+            return "lives";
         } else {
-            return "life.";
+            return "life";
         }
     }
 }

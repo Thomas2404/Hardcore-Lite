@@ -14,7 +14,7 @@ public class ConfigGetter {
     }
 
     public String livesPath(Player player) {
-        return ("players." + player.getUniqueId().toString() + ".lives");
+        return ("players." + player.getUniqueId() + ".lives");
     }
 
     public String namePath(Player player) {
@@ -37,6 +37,4 @@ public class ConfigGetter {
         setLives(player, 5);
         plugin.saveConfig();
     }
-
-
 }

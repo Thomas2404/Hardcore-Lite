@@ -16,7 +16,6 @@ public class Commands implements CommandExecutor {
         this.plugin = plugin;
     }
 
-
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String cmdLabel, String[] args) {
 
@@ -45,48 +44,42 @@ public class Commands implements CommandExecutor {
                 String command = args[0].toLowerCase(Locale.ROOT);
                 switch (command) {
                     case "lives":
-
+                        //Set up the life word variable and send a message to the sender with how many lives they have.
                         int lives = plugin.configGetter.currentLives(player);
-
-                        String lifeWord = "life";
-                        if (lives != 1) {
-                            lifeWord = "lives";
-                        }
-
+                        String lifeWord = plugin.lifeWord.getWord(lives);
                         sender.sendMessage(ChatColor.WHITE + "You currently have " + ChatColor.RED + lives + ChatColor.WHITE + " " + lifeWord + " remaining");
                         break;
                     case "about":
                         break;
                     case "colors":
+                        //Send the sender a message about what each color means.
                         sender.sendMessage(ChatColor.WHITE + "Dark green = " + ChatColor.RED + "5" + ChatColor.WHITE + " or more lives, light green = "
                                 + ChatColor.RED + "4" + ChatColor.WHITE + " lives, yellow = " + ChatColor.RED + "3" + ChatColor.WHITE + " lives, light red = "
                                 + ChatColor.RED + "2" + ChatColor.WHITE + " lives, dark red = " + ChatColor.RED + "1" + ChatColor.WHITE + " life, and grey = 0 lives remaining.");
                         break;
                     case "list":
                         int i = 1;
+                        //For every UUID in the config.
                         for (String key : plugin.fileConfiguration.getConfigurationSection("players").getKeys(false)) {
-
+                            //Set up the lives and life word variables.
                             lives = plugin.fileConfiguration.getInt("players." + key + ".lives");
-
-                            lifeWord = "life";
-                            if (lives != 1) {
-                                lifeWord = "lives";
-                            }
+                            lifeWord = plugin.lifeWord.getWord(lives);
+                            //Send a message to the sender about every player's lives.
                             sender.sendMessage(ChatColor.WHITE + String.valueOf(i) + ". " + ChatColor.RED + plugin.fileConfiguration.getString("players." + key + ".name") + ChatColor.WHITE + " currently has " + ChatColor.RED + plugin.fileConfiguration.getInt("players." + key + ".lives") + ChatColor.WHITE + " " + lifeWord + " remaining.");
                             i ++;
                         }
                         break;
                     case "earnlives":
+                            //Sends a message to the player about how you can earn more lives.
                             sender.sendMessage(ChatColor.WHITE + "You can earn more lives by completing certain " + ChatColor.RED + "advancements" + ChatColor.WHITE + ".");
                             sender.sendMessage(ChatColor.WHITE + "There is the opportunity to earn " + ChatColor.RED + "15" + ChatColor.WHITE + " more lives, giving each player " +
                                     "the ability to reach a total of " + ChatColor.RED + "20" + ChatColor.WHITE + " lives on their own.");
                         break;
                     case "add":
+                        //If the sender is OPed, and there's 3 words in the command.
                         if (sender.isOp()) {
                             if (args.length == 3) {
-
-                                String receiverName = args[1];
-
+                                //Try to get an int from the command, catch an error.
                                 int addedLives;
                                 try {
                                     addedLives = Integer.parseInt(args[2]);;
@@ -95,11 +88,11 @@ public class Commands implements CommandExecutor {
                                 {
                                     addedLives = 0;
                                 }
-
+                                //If you're not adding 0 or -0 lives, and the player is online.
                                 if (addedLives != 0 && addedLives != -0) {
-                                    if (String.valueOf(Bukkit.getOnlinePlayers()).contains(receiverName)) {
-
-                                        Player receiver = Bukkit.getPlayer(receiverName);
+                                    if (String.valueOf(Bukkit.getOnlinePlayers()).contains(args[1])) {
+                                        //Set up the receiver variable, and current lives.
+                                        Player receiver = Bukkit.getPlayer(args[1]);
                                         int currentLives = plugin.configGetter.currentLives(receiver);
                                         //Set the receivers lives to their current lives + the lives that the giver gave to them.
                                         plugin.configGetter.setLives(receiver, currentLives + addedLives);
@@ -107,24 +100,16 @@ public class Commands implements CommandExecutor {
                                         if (plugin.configGetter.currentLives(receiver) < 0) {
                                             plugin.configGetter.setLives(receiver, 0);
                                         }
-
+                                        //Set up the lives variable after the lives have been changed, and set up the life words to use.
                                         int totalLives = plugin.configGetter.currentLives(receiver);
+                                        String totalLifeWord = plugin.lifeWord.getWord(totalLives);
+                                        lifeWord = plugin.lifeWord.getWord(addedLives);
 
-                                        lifeWord = "life";
-                                        if (addedLives != 1) {
-                                            lifeWord = "lives";
-                                        }
-
-                                        String totalLifeWord = "life";
-                                        if (totalLives != 1) {
-                                            totalLifeWord = "lives";
-                                        }
-
-                                        sender.sendMessage(ChatColor.WHITE + "You have given " + ChatColor.RED + receiverName + " "  + addedLives + " " + ChatColor.WHITE + lifeWord + ".");
+                                        sender.sendMessage(ChatColor.WHITE + "You have given " + ChatColor.RED + receiver.getName() + " "  + addedLives + " " + ChatColor.WHITE + lifeWord + ".");
                                         receiver.sendMessage(ChatColor.WHITE + "You have been given " + ChatColor.RED + addedLives + " " + ChatColor.WHITE + lifeWord + ".");
                                         receiver.sendMessage(ChatColor.WHITE + "You now have " + ChatColor.RED + totalLives + ChatColor.WHITE + " lives.");
                                         //Send a message to the server about the life transaction.
-                                        plugin.getServer().broadcastMessage(ChatColor.RED + receiverName + ChatColor.WHITE + " has been given " + ChatColor.RED + addedLives + " " + ChatColor.WHITE + lifeWord + ". They now have " + ChatColor.RED + totalLives + ChatColor.WHITE + " " + totalLifeWord + ".");
+                                        plugin.getServer().broadcastMessage(ChatColor.RED + receiver.getName() + ChatColor.WHITE + " has been given " + ChatColor.RED + addedLives + " " + ChatColor.WHITE + lifeWord + ". They now have " + ChatColor.RED + totalLives + ChatColor.WHITE + " " + totalLifeWord + ".");
                                         //Reload the name colors
                                         plugin.setNameColor.changeNameColor(receiver, totalLives);
                                     }
@@ -138,16 +123,16 @@ public class Commands implements CommandExecutor {
                             sender.sendMessage(ChatColor.RED + "You do not have permission to use this command.");
                         }
                         break;
+                    //Lots of nested if's on the give command because there's a few different user error messages.
                     case "give":
+                            //If the player that is being sent lives is online.
                             if (args.length == 3 && (String.valueOf(Bukkit.getOnlinePlayers()).contains(args[1]))) {
-
-                                String receiverName = args[1];
-
-                                Player receiver = Bukkit.getPlayer(receiverName);
+                                //Set up the player variables.
+                                Player receiver = Bukkit.getPlayer(args[1]);
                                 Player lifeGiver = ((Player) sender).getPlayer();
-
+                                //If the sender isn't trying to give themselves lives.
                                 if (receiver.getName() != lifeGiver.getName()) {
-
+                                    //Try to get an int from the command, catch an error.
                                     int givenLives;
                                     try {
                                         givenLives = Integer.parseInt(args[2]);;
@@ -156,43 +141,27 @@ public class Commands implements CommandExecutor {
                                     {
                                         givenLives = 0;
                                     }
-
-                                    String receiverUID = String.valueOf(receiver.getUniqueId());
-                                    String giverUID = String.valueOf(lifeGiver.getUniqueId());
-
+                                    //Set up the starting and end life values for both players.
+                                    int startingGiverLives = plugin.configGetter.currentLives(lifeGiver);
+                                    int startingReceiverLives = plugin.configGetter.currentLives(receiver);
+                                    int endGiverLives = startingGiverLives - givenLives;
+                                    int endReceiverLives = startingReceiverLives + givenLives;
                                     //If the person running the command has enough lives to give.
-                                    if (plugin.fileConfiguration.getInt("players." + giverUID + ".lives") >= givenLives) {
+                                    if (startingGiverLives >= givenLives) {
                                         if (givenLives > 0) {
-
-                                            int startingGiverLives = plugin.fileConfiguration.getInt("players." + giverUID + ".lives");
-                                            int startingReceiverLives = plugin.fileConfiguration.getInt("players." + receiverUID + ".lives");
-
-                                            int endGiverLives = startingGiverLives - givenLives;
-                                            int endReceiverLives = startingReceiverLives + givenLives;
-
-                                            plugin.fileConfiguration.set("players." + giverUID + ".lives", endGiverLives);
-                                            plugin.fileConfiguration.set("players." + receiverUID + ".lives", endReceiverLives);
-
-                                            plugin.saveConfig();
-
-                                            lifeWord = "life";
-                                            if (givenLives != 1) {
-                                                lifeWord = "lives";
-                                            }
-
-                                            String endLifeWord = "life";
-                                            if (endReceiverLives != 1) {
-                                                endLifeWord = "lives";
-                                            }
-
+                                            //Set the lives for the giver and receiver to the correct numbers.
+                                            plugin.configGetter.setLives(lifeGiver, endGiverLives);
+                                            plugin.configGetter.setLives(receiver, endReceiverLives);
+                                            //Set up which word to use when sending messages to the players and server.
+                                            String endLifeWord = plugin.lifeWord.getWord(endReceiverLives);
+                                            lifeWord = plugin.lifeWord.getWord(givenLives);
+                                            //Send messages to the players and server alerting them about the transaction.
                                             receiver.sendMessage(ChatColor.WHITE + "You were given " + ChatColor.RED + givenLives + " " + ChatColor.WHITE + lifeWord + " by " + ChatColor.RED + lifeGiver.getName() + ChatColor.WHITE + ".");
                                             lifeGiver.sendMessage(ChatColor.WHITE + "You gave " + ChatColor.RED + receiver.getName() + " " + givenLives + ChatColor.WHITE + " " + lifeWord + ".");
-
-                                            plugin.getServer().broadcastMessage(ChatColor.RED + lifeGiver.getName() + ChatColor.WHITE + " has given " + ChatColor.RED + receiverName + " " + ChatColor.RED + givenLives + " " + ChatColor.WHITE + lifeWord + ". " + ChatColor.RED + receiverName + ChatColor.RED + " now has " + ChatColor.RED + endReceiverLives + ChatColor.WHITE + " " + endLifeWord + ".");
-
+                                            plugin.getServer().broadcastMessage(ChatColor.RED + lifeGiver.getName() + ChatColor.WHITE + " has given " + ChatColor.RED + receiver.getName() + " " + ChatColor.RED + givenLives + " " + ChatColor.WHITE + lifeWord + ". " + ChatColor.RED + receiver.getName() + ChatColor.RED + " now has " + ChatColor.RED + endReceiverLives + ChatColor.WHITE + " " + endLifeWord + ".");
+                                            //Update name colors.
                                             plugin.setNameColor.changeNameColor(lifeGiver, endGiverLives);
                                             plugin.setNameColor.changeNameColor(receiver, endReceiverLives);
-
                                         } else {
                                             sender.sendMessage(ChatColor.RED + "Invalid usage. Please make sure you are giving a player at least one life.");
                                         }
